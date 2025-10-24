@@ -1,16 +1,15 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -I/usr/include/sai
-LDFLAGS = 
+LDFLAGS = -lsai -lpthread
 
-TARGET = sai_example
-SOURCES = sai_example.c
+TARGET = sai_app
 
 .PHONY: all clean
 
 all: $(TARGET)
 
-$(TARGET): $(SOURCES)
-	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCES) $(LDFLAGS)
+$(TARGET): sai_app.c
+	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
 clean:
 	rm -f $(TARGET)
