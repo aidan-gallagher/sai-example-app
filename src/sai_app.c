@@ -39,81 +39,50 @@ const sai_service_method_table_t service_table = {
 int main() {
     sai_status_t status;
     
-    printf("╔════════════════════════════════════════════╗\n");
-    printf("║   SAI Broadcom Application Example        ║\n");
-    printf("╚════════════════════════════════════════════╝\n\n");
-    
-    // Step 1: Initialize SAI
-    printf("→ Initializing SAI with Broadcom implementation...\n");
+    // Initialize SAI
+    printf("Initializing SAI...\n");
     status = sai_api_initialize(0, &service_table);
     if (status != SAI_STATUS_SUCCESS) {
-        printf("✗ Failed to initialize SAI: %d\n", status);
+        printf("Failed to initialize SAI: %ld\n", status);
         return 1;
     }
-    printf("✓ SAI initialized successfully\n\n");
     
-    // Step 2: Query Switch API
-    printf("→ Querying Switch API...\n");
+    // Query Switch API
     sai_switch_api_t *switch_api = NULL;
     status = sai_api_query(SAI_API_SWITCH, (void**)&switch_api);
     if (status != SAI_STATUS_SUCCESS) {
-        printf("✗ Failed to query switch API: %d\n", status);
+        printf("Failed to query switch API: %ld\n", status);
         sai_api_uninitialize();
         return 1;
     }
-    printf("✓ Switch API retrieved successfully\n\n");
+    printf("Switch API retrieved\n");
     
-    // Step 3: Display API information
-    printf("SAI API Information:\n");
-    printf("  • Switch API pointer: %p\n", (void*)switch_api);
-    printf("  • API has %lu function pointers\n", sizeof(*switch_api) / sizeof(void*));
-    printf("\n");
+    // Create switch
+    printf("Creating switch...\n");
+    sai_object_id_t switch_id;
+    sai_attribute_t attr;
+    attr.id = SAI_SWITCH_ATTR_INIT_SWITCH;
+    attr.value.booldata = true;
     
-    printf("Available Switch API Functions:\n");
-    printf("  • create_switch:        %p\n", (void*)switch_api->create_switch);
-    printf("  • remove_switch:        %p\n", (void*)switch_api->remove_switch);
-    printf("  • set_switch_attribute: %p\n", (void*)switch_api->set_switch_attribute);
-    printf("  • get_switch_attribute: %p\n", (void*)switch_api->get_switch_attribute);
-    printf("\n");
-    
-    // Step 4: Query other APIs
-    printf("→ Querying other SAI APIs...\n");
-    
-    sai_port_api_t *port_api = NULL;
-    if (sai_api_query(SAI_API_PORT, (void**)&port_api) == SAI_STATUS_SUCCESS) {
-        printf("✓ Port API available\n");
+    status = switch_api->create_switch(&switch_id, 1, &attr);
+    if (status == SAI_STATUS_SUCCESS) {
+        printf("Switch created: 0x%016lx\n", switch_id);
+        
+        // Query port count
+        sai_attribute_t get_attr;
+        get_attr.id = SAI_SWITCH_ATTR_PORT_NUMBER;
+        status = switch_api->get_switch_attribute(switch_id, 1, &get_attr);
+        if (status == SAI_STATUS_SUCCESS) {
+            printf("Number of ports: %u\n", get_attr.value.u32);
+        }
+    } else {
+        printf("Switch creation failed: %ld (expected without hardware)\n", status);
     }
     
-    sai_vlan_api_t *vlan_api = NULL;
-    if (sai_api_query(SAI_API_VLAN, (void**)&vlan_api) == SAI_STATUS_SUCCESS) {
-        printf("✓ VLAN API available\n");
-    }
-    
-    sai_route_api_t *route_api = NULL;
-    if (sai_api_query(SAI_API_ROUTE, (void**)&route_api) == SAI_STATUS_SUCCESS) {
-        printf("✓ Route API available\n");
-    }
-    
-    sai_fdb_api_t *fdb_api = NULL;
-    if (sai_api_query(SAI_API_FDB, (void**)&fdb_api) == SAI_STATUS_SUCCESS) {
-        printf("✓ FDB API available\n");
-    }
-    printf("\n");
-    
-    // Step 5: Cleanup
-    printf("→ Cleaning up...\n");
+    // Cleanup
+    printf("Cleaning up...\n");
     sai_api_uninitialize();
-    printf("✓ SAI uninitialized\n\n");
-    
-    printf("═══════════════════════════════════════════════\n");
-    printf("✓ Successfully connected to Broadcom SAI!\n");
-    printf("═══════════════════════════════════════════════\n\n");
-    
-    printf("Next Steps:\n");
-    printf("  1. Call create_switch() to initialize hardware\n");
-    printf("  2. Query switch attributes (ports, capabilities)\n");
-    printf("  3. Configure VLANs, routes, ACLs, etc.\n");
-    printf("  4. Start forwarding traffic!\n\n");
+    printf("Done\n");
     
     return 0;
 }
