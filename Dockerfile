@@ -1,70 +1,26 @@
-# Dockerfile for SAI Virtual Switch Development Environment
-FROM ubuntu:22.04
+FROM debian:bookworm
 
-# Avoid interactive prompts during build
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install build dependencies
+# Install build tools
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
-    autoconf \
-    automake \
-    libtool \
-    pkg-config \
-    libzmq5-dev \
-    libboost-dev \
-    libnl-3-dev \
-    libnl-route-3-dev \
-    libnl-nf-3-dev \
-    libnl-genl-3-dev \
-    libhiredis-dev \
-    swig \
-    libgtest-dev \
-    nlohmann-json3-dev \
-    iproute2 \
-    iputils-ping \
-    tcpdump \
-    net-tools \
     vim \
     && rm -rf /var/lib/apt/lists/*
 
-# Create workspace
+# Clone SAI headers from OCP repository
+RUN git clone --depth 1 https://github.com/opencomputeproject/SAI.git /tmp/SAI && \
+    mkdir -p /usr/include/sai && \
+    cp /tmp/SAI/inc/*.h /usr/include/sai/ && \
+    cp /tmp/SAI/experimental/*.h /usr/include/sai/ 2>/dev/null || true && \
+    rm -rf /tmp/SAI
+
+# Copy source code
 WORKDIR /workspace
+COPY src/ .
 
-# Clone sonic-swss-common (required dependency)
-RUN git clone https://github.com/sonic-net/sonic-swss-common.git && \
-    cd sonic-swss-common && \
-    git checkout 202411 && \
-    ./autogen.sh && \
-    ./configure && \
-    make -j$(nproc) && \
-    make install && \
-    ldconfig
+# Build application
+RUN make
 
-# Clone sonic-sairedis (contains virtual switch)
-RUN git clone https://github.com/sonic-net/sonic-sairedis.git && \
-    cd sonic-sairedis && \
-    git checkout 202411 && \
-    git submodule update --init --recursive
-
-# Build sonic-sairedis
-RUN cd sonic-sairedis && \
-    ./autogen.sh && \
-    ./configure --with-sai=vs && \
-    make -j$(nproc) && \
-    make install && \
-    ldconfig
-
-# Copy application source
-COPY src/ /workspace/app/
-COPY Makefile /workspace/app/
-
-# Set working directory for the application
-WORKDIR /workspace/app
-
-# Build the example application
-RUN make clean && make
-
-# Default command
 CMD ["/bin/bash"]
