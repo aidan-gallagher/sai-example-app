@@ -17,11 +17,11 @@ RUN git clone --depth 1 https://github.com/opencomputeproject/SAI.git /tmp/SAI &
     rm -rf /tmp/SAI
 
 # Copy and install Broadcom SAI package
-COPY debs/*.deb /tmp/
-RUN dpkg -i /tmp/*.deb || true && \
+COPY debs/libsaibcm_dnx_12.3.2.2_amd64.deb /tmp/
+RUN dpkg -i /tmp/libsaibcm_dnx_12.3.2.2_amd64.deb || true && \
     apt-get update && \
     apt-get install -f -y && \
-    rm -rf /tmp/*.deb && \
+    rm -rf /tmp/libsaibcm_dnx_12.3.2.2_amd64.deb && \
     ln -sf /usr/lib/libsai.so.1 /usr/lib/libsai.so && \
     ldconfig
 
