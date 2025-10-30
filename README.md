@@ -30,3 +30,9 @@ docker run -it sai-app
 Broadcom SAI implementation is closed source.
 
 In `sonic-buildimage/platform/broadcom/sai.mk` you can see it pulls down https://packages.trafficmanager.net/public/sai/sai-broadcom/SAI_12.3.0_GA/12.3.2.2/dnx/libsaibcm_dnx_12.3.2.2_amd64.deb.
+
+
+## TODO:
+Rather than using broadcom SAI implementation, try to get virtual SAI implementation:
+* vslib: https://github.com/sonic-net/sonic-sairedis/tree/master/vslib 
+* VPP: https://github.com/sonic-net/sonic-platform-vpp/
